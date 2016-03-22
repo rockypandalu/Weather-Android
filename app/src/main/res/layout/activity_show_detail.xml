@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FF0099CC">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="@string/init_date"
+        android:id="@+id/textViewDetDate"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="100dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/init_weather"
+        android:id="@+id/textViewDetWeather"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="10dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="@string/desp"
+        android:id="@+id/textViewDetDescription"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="10dp" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/imageButtonDetWeather"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="10dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="@string/temp_avg"
+        android:id="@+id/textViewDetTempAvg"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="10dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/pressure"
+        android:id="@+id/textViewDetPressure"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="10dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/wind"
+        android:id="@+id/textViewDetWind"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="10dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/humidity"
+        android:id="@+id/textViewDetHumidity"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="10dp" />
+</LinearLayout>
