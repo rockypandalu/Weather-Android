@@ -2,6 +2,7 @@
 # Homework Achievement Checklist
 
 To build an Android application that will display the 10 day forecast retrieved from an API. 
+
 Pull down forecast details from an API (ex: WeatherUnderground, Forecast.io). Make sure that you have the ability to refresh the data. 
 
 I pull down forecast detail from OpenWeatherMap API in JSON format. By clicking the main weather icon ImageButton, the app will refresh the current weather data. And the weather information for the next 10 days will be updated whenever the app is restarted (updated in onCreateView Stage of WeatherFragment)
