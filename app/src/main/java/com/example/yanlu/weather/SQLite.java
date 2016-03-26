@@ -26,7 +26,7 @@ import org.json.JSONObject;
 
 public class SQLite extends SQLiteOpenHelper{
     public SQLite(Context context) {
-        super(context, "weather_db", null, 1);
+        super(context, "weather_db", null, 4);
     }
 
     @Override
@@ -50,14 +50,18 @@ public class SQLite extends SQLiteOpenHelper{
 
     public void deleteAll(){
         SQLiteDatabase db = getWritableDatabase();
-        for (int i = 1; i<11;i++){
-            db.delete("FutureWeather", "id=?", new String[]{Integer.toString(i)});
-        }
+        db.delete("FutureWeather",null,null);
+//        for (int i = 1; i<11;i++){
+//            db.delete("FutureWeather", "id=?", new String[]{Integer.toString(i)});
+//        }
     }
 
     public Cursor select(int id) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cur = db.rawQuery("select * from FutureWeather where id="+id+"", null);
+        String[] col = {"*"};
+        String[] selArg = {Integer.toString(id)};
+        Cursor cur = db.query("FutureWeather",col, "id=?", selArg,null,null,null);
+//        Cursor cur = db.rawQuery("select * from FutureWeather where id="+id+"", null);
         return cur;
     }
 

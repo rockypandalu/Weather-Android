@@ -10,7 +10,7 @@ package com.example.yanlu.weather;
  */
 
 public class ImageSelect {
-    public static Object weatherIcon(String icon){
+    public static Integer weatherIcon(String icon){
         int img;
         switch(icon){
             case "01d": img = R.drawable.d01;
@@ -56,7 +56,7 @@ public class ImageSelect {
         return img;
     }
 
-    public static Object weatherMainIcon(String icon){
+    public static Integer weatherMainIcon(String icon){
         int img;
         switch(icon){
             case "01d": img = R.mipmap.dd1;

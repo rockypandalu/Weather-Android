@@ -10,6 +10,8 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
@@ -43,19 +45,13 @@ public class WeatherFragment extends Fragment implements LocationListener {
     TextView dateField;
     TextView tempField;
     ListView weatherListView;
-    private Handler handler1;
-    private Handler handler2;
+    private Handler handler;
     private String LatLong;
     private SQLite db;
     private Location location;
     private LocationManager locationManager;
     private ArrayList<HashMap<String, Object>> listItem = new ArrayList<>();
 
-    public WeatherFragment(){
-        handler1 = new Handler();
-        handler2 = new Handler();
-
-    }
 
     /**
      * Initial SQLite database in onCreate Stage
@@ -70,6 +66,7 @@ public class WeatherFragment extends Fragment implements LocationListener {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        Log.d("stop","onCreate");
         View rootView = inflater.inflate(R.layout.fragment_current, container, false);
         weatherField = (TextView)rootView.findViewById(R.id.textViewWeather);
         dateField = (TextView)rootView.findViewById(R.id.textViewDate);
@@ -104,7 +101,8 @@ public class WeatherFragment extends Fragment implements LocationListener {
         curImgBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                updateCurWeather(LatLong);
+                updateCurWeather cur_weatherTask = new updateCurWeather();
+                cur_weatherTask.execute(LatLong);
                 Toast.makeText(getActivity(), "Current Weather Updated", Toast.LENGTH_SHORT).show();
             }
         });
@@ -134,56 +132,55 @@ public class WeatherFragment extends Fragment implements LocationListener {
         /**
          * Update weather information (current & next 10 days), store data and show data
          */
-        updateWeather(LatLong);
-        updateCurWeather(LatLong);
+        updateWeather weatherTask = new updateWeather();
+        weatherTask.execute(LatLong);
+
         return rootView;
     }
 
-
-    /**
-     * Update current weather data using API
-     * @param city
-     */
-    private void updateCurWeather(final String city){
-        new Thread(){
-            public void run(){
-                final JSONObject cur_json = GetWeather.getJSON(getActivity(), city, "http://api.openweathermap.org/data/2.5/weather?%s");
-
-                handler2.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        showUpdate(cur_json);
-
-                    }
-                });
+    private class updateWeather extends AsyncTask<String, Void, Void> {
+        private JSONObject cur_json = null;
+        private JSONObject future_json = null;
+        @Override
+        protected Void doInBackground(String... city){
+            while (cur_json == null) {
+                cur_json = GetWeather.getJSON(getActivity(), city[0], getActivity().getString(R.string.cur_weather_API));
             }
+            while (future_json == null){
+                future_json = GetWeather.getJSON(getActivity(), city[0], getActivity().getString(R.string.further_weather_API));
+            }
+            db.deleteAll();
+            return null;
+        }
 
-//            }
-        }.start();
+        @Override
+        protected void onPostExecute(Void result){
+            showUpdate(cur_json);
+            showFutureUpdate(future_json);
+            updateSQL(future_json);
+        }
     }
 
-    /**
-     * Update daily weather in the next 10 days using API
-     * @param city
-     */
-    private void updateWeather(final String city){
-        new Thread(){
-            public void run(){
-                final JSONObject json = GetWeather.getJSON(getActivity(), city, "http://api.openweathermap.org/data/2.5/forecast/daily?%s&cnt=10&mode=json");
+    private class updateCurWeather extends AsyncTask<String, Void, JSONObject> {
+        @Override
+        protected JSONObject doInBackground(String... city){
+            JSONObject cur_json = null;
+            while (cur_json == null){
+                cur_json = GetWeather.getJSON(getActivity(), city[0], getActivity().getString(R.string.cur_weather_API));
 
-                handler1.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        showFutureUpdate(json);
-                        db.deleteAll();
-                        updateSQL(json);
-                    }
-                });
-                }
+            }
+            return cur_json;
+        }
 
-//            }
-        }.start();
+        @Override
+        protected void onPostExecute(JSONObject cur_json){
+            showUpdate(cur_json);
+        }
     }
+
+
+
+
 
     /**
      * Extract information in jSONObject, and show current weather on screen
@@ -193,14 +190,14 @@ public class WeatherFragment extends Fragment implements LocationListener {
         try{
 //            Toast.makeText(getActivity(), json.toString(), Toast.LENGTH_LONG).show();
             float cur_temp = Float.parseFloat(json.getJSONObject("main").getString("temp"));
-            int temp_int = (int)((cur_temp - 273.15)*1.8+32);
+            String temp_int = kToC(Float.toString(cur_temp));
             JSONObject weather_info = json.getJSONArray("weather").getJSONObject(0);
             curImgBtn.setImageResource((Integer) ImageSelect.weatherMainIcon(weather_info.getString("icon").toString()));
             weatherField.setText(weather_info.getString("main"));
             dateField.setText(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
-            tempField.setText(Integer.toString(temp_int) + "℉");
+            tempField.setText(temp_int + "℉");
         }catch(Exception e){
-            updateCurWeather(LatLong);
+
             Log.d("CurrentWeather", "One or more fields not found in the JSON data");
         }
     }
@@ -232,7 +229,7 @@ public class WeatherFragment extends Fragment implements LocationListener {
             SimpleAdapter listItemAdapter = new SimpleAdapter(getActivity(),listItem,R.layout.list_item, new String[]{"ItemImg","ItemDate","ItemTemp","ItemWeather"},new int[]{R.id.img,R.id.listDate,R.id.listTemp,R.id.listWeather});
             weatherListView.setAdapter(listItemAdapter);
         }catch(Exception e){
-            updateWeather(LatLong);
+//            updateWeather(LatLong);
             Log.d("FutureWeather", "One or more fields not found in the JSON data");
 
         }
@@ -264,6 +261,12 @@ public class WeatherFragment extends Fragment implements LocationListener {
         }
 
     }
+    @Override
+    public void onStop(){
+        super.onStop();
+        Log.d("stop","Stopped");
+    }
+
 
     /**
      * Change temperature unit from Kelvin to Fahrenheit
