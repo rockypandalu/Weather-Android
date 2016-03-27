@@ -13,4 +13,6 @@
     <string name="place_not_found">Sorry, no weather data found.</string>
     <string name="cur_weather_API">http://api.openweathermap.org/data/2.5/weather?%s</string>
     <string name="further_weather_API">http://api.openweathermap.org/data/2.5/forecast/daily?%s&amp;cnt=10&amp;mode=json</string>
+    <string name="location">location</string>
+
 </resources>
