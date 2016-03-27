@@ -4,9 +4,15 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
+
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -36,7 +42,9 @@ import org.json.JSONObject;
  * It sets onItemClickListener on ListView, when click a cell, the app start a new activity with animation to show detailed weather
  * It heritages SQLite class and insert future weather data to SQLite
  * The transition animation is customized when transfer from WeatherFragment to DetailActivity
- * If using real phone, the app can use the phone location to report weather, if using emulator the app use New York Location
+ * When the phone has enabled location, the app will use current lcoation to report weather and renew the data in shared preference
+ * If the phone has disabled location, the app use shared preference data
+ * If using emulator the app use New York Location (as default value)
  * because the Emulator does not support location information
  */
 public class WeatherFragment extends Fragment implements LocationListener {
@@ -81,16 +89,25 @@ public class WeatherFragment extends Fragment implements LocationListener {
          */
         locationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
         if ( ContextCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED ) {
-            location = locationManager.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
+            location = locationManager.getLastKnownLocation(locationManager.NETWORK_PROVIDER);
+            if (location == null){
+                showLocationAlert();
+            }
         }
         if (location != null){
             Double lat = location.getLatitude();
             Double lon = location.getLongitude();
             LatLong = "lat="+lat+"&lon="+lon+"";
-            Log.d("location",LatLong);
+            SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
+            SharedPreferences.Editor stored_location = sharedPref.edit();
+            stored_location.putString(getString(R.string.location),LatLong);
+            stored_location.commit();
+            Log.d("location", LatLong);
         }
         else{
-            LatLong = "lat=40.8&lon=-73.95";
+            SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
+            LatLong = sharedPref.getString(getString(R.string.location),"lat=40.8&lon=-73.95");
+            Log.d("get",LatLong);
             Log.d("location","default");
         }
 
@@ -138,6 +155,42 @@ public class WeatherFragment extends Fragment implements LocationListener {
         return rootView;
     }
 
+    /**
+     * If the location is disabled, the app show alert to ask whether to enable location and use the last location
+     * Or use the old location data catched in the last time when location was enabled.
+     * The old location data were stored and updated in Shared Preference
+     */
+    private void showLocationAlert(){
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
+                getActivity());
+        alertDialogBuilder
+                .setMessage("Do you want to renew the location?")
+                .setCancelable(false)
+                .setPositiveButton("Yes",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog,
+                                                int id) {
+                                Intent callGPSSettingIntent = new Intent(
+                                        android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                                getActivity().startActivity(callGPSSettingIntent);
+                                getActivity().finish();
+                            }
+                        });
+        alertDialogBuilder.setNegativeButton("No",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        Toast.makeText(getActivity(), "Displaying Weather in Old Location", Toast.LENGTH_LONG).show();
+                        dialog.cancel();
+                    }
+                });
+        AlertDialog alert = alertDialogBuilder.create();
+        alert.show();
+
+    }
+
+    /**
+     * Update current weather form openWeather API using AsyncTask
+     */
     private class updateWeather extends AsyncTask<String, Void, Void> {
         private JSONObject cur_json = null;
         private JSONObject future_json = null;
@@ -161,6 +214,9 @@ public class WeatherFragment extends Fragment implements LocationListener {
         }
     }
 
+    /**
+     * Update future weather form openWeather API using AsyncTask and renew SQLite
+     */
     private class updateCurWeather extends AsyncTask<String, Void, JSONObject> {
         @Override
         protected JSONObject doInBackground(String... city){
